@@ -1,0 +1,16 @@
+export type Quiz = { id: string; title: string; description: string; creator: string; category: string; questions: number; stars: number; created: string; prompts: string[] };
+
+export const categories = ["Computer Science", "Web Development", "Science", "History", "Languages", "General"];
+
+export const quizzes: Quiz[] = [
+  { id: "http-basics", title: "HTTP, properly", description: "Status codes, verbs and headers that every web developer should know cold.", creator: "Nadia Perera", category: "Web Development", questions: 12, stars: 214, created: "2026-10-28", prompts: ["Which status code means a resource was created?", "Which verb is idempotent but not safe?", "What does the Vary header control?"] },
+  { id: "big-o", title: "Big-O without the fear", description: "Reading complexity from code, one loop at a time.", creator: "Kasun Silva", category: "Computer Science", questions: 10, stars: 188, created: "2026-10-02", prompts: ["What is the complexity of binary search?", "Which sort is O(n log n) worst case?", "What does amortised cost mean?"] },
+  { id: "css-layout", title: "Flexbox and Grid showdown", description: "When to reach for which, and why align-items surprises everyone.", creator: "Maya Fernando", category: "Web Development", questions: 15, stars: 156, created: "2026-11-03", prompts: ["What does flex: 1 expand to?", "Which unit is unique to grid?", "How do you centre a grid child?"] },
+  { id: "sri-lanka-history", title: "Kingdoms of Sri Lanka", description: "From Anuradhapura to Kandy, a fast tour through the island's past.", creator: "Dr. R. Jayasuriya", category: "History", questions: 20, stars: 97, created: "2026-09-14", prompts: ["Which kingdom came first, Polonnaruwa or Anuradhapura?", "Who built Sigiriya?", "When did the Kandyan kingdom fall?"] },
+  { id: "git-habits", title: "Git habits quiz", description: "Rebase, merge, reset. Find out how much of it you really understand.", creator: "Tharindu Bandara", category: "Computer Science", questions: 8, stars: 81, created: "2026-11-08", prompts: ["What does git reset --soft change?", "When is a fast-forward merge possible?", "What does git stash pop do?"] },
+  { id: "cell-biology", title: "Inside the cell", description: "Organelles, membranes and the processes that keep cells alive.", creator: "Ishara Gunawardena", category: "Science", questions: 14, stars: 64, created: "2026-08-21", prompts: ["Which organelle makes ATP?", "What does the Golgi apparatus do?", "Where does translation happen?"] },
+  { id: "tamil-sinhala", title: "Sinhala and Tamil loanwords", description: "Words that crossed between languages without anyone noticing.", creator: "Anjali Kumar", category: "Languages", questions: 9, stars: 42, created: "2026-10-19", prompts: ["Which of these is a Portuguese loanword?", "What does the Tamil word for rice share with Sinhala?"] },
+  { id: "ts-types", title: "TypeScript, the tricky parts", description: "Narrowing, generics and the unknown type.", creator: "Nadia Perera", category: "Web Development", questions: 11, stars: 130, created: "2026-11-01", prompts: ["What does the satisfies operator do?", "When does narrowing fail?", "How is unknown different from any?"] },
+];
+
+export const byId = (id: string) => quizzes.find((q) => q.id === id);
