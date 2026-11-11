@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const protectedPaths = ["/create", "/profile"];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
@@ -20,7 +22,9 @@ export async function updateSession(request: NextRequest) {
 
   // getClaims verifies the token signature; getSession does not
   const { data } = await supabase.auth.getClaims();
-  if (!data?.claims && request.nextUrl.pathname.startsWith("/create")) {
+  const isProtected = protectedPaths.some((p) => request.nextUrl.pathname.startsWith(p));
+
+  if (!data?.claims && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
