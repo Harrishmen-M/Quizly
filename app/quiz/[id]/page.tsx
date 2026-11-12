@@ -55,20 +55,6 @@ async function Details({ params }: { params: Promise<{ id: string }> }) {
           signedIn={!!userId}
         />
       </div>
-      <h2 className="mt-14 text-2xl">A taste of the questions</h2>
-      <ul className="mt-3 max-w-xl border-t border-line">
-        {quiz.prompts.map((p) => (
-          <li key={p} className="border-b border-line py-4">
-            {p}
-          </li>
-        ))}
-        {quiz.questions > quiz.prompts.length && (
-          <li className="py-4 text-muted">
-            {quiz.questions - quiz.prompts.length} more. Answers stay hidden
-            until you play.
-          </li>
-        )}
-      </ul>
     </>
   );
 }
