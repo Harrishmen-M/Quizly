@@ -8,7 +8,7 @@ async function Room({ params }: { params: Promise<{ code: string }> }) {
 
 export default function Page({ params }: { params: Promise<{ code: string }> }) {
   return (
-    <div className="wrap pt-14">
+    <div className="mx-auto w-full max-w-xl px-5 pt-8 pb-12 sm:pt-14">
       <Suspense fallback={<p className="text-muted">Loading...</p>}>
         <Room params={params} />
       </Suspense>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSessionState } from "@/lib/useSessionState";
 import Countdown from "@/components/Countdown";
@@ -8,6 +9,16 @@ import Leaderboard from "@/components/Leaderboard";
 
 type Player = { id: string; nickname: string };
 type Me = { playerId: string; sessionId: string; nickname: string };
+
+function Progress({ index, total }: { index: number; total: number }) {
+  return (
+    <div className="flex gap-1.5" aria-hidden>
+      {Array.from({ length: total }, (_, i) => (
+        <span key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= index ? "bg-ink" : "bg-line"}`} />
+      ))}
+    </div>
+  );
+}
 
 function Game({ me }: { me: Me }) {
   const { state, receivedAt } = useSessionState(me.sessionId, me.playerId);
@@ -36,84 +47,140 @@ function Game({ me }: { me: Me }) {
     if (data?.error) { setPick(null); setErr(data.error); }
   }
 
-  if (!state) return <p className="text-muted">Loading...</p>;
+  if (!state) {
+    return (
+      <div aria-hidden className="animate-pulse">
+        <div className="h-10 w-3/4 rounded bg-ink/10" />
+        <div className="mt-4 h-5 w-1/2 rounded bg-ink/5" />
+        <div className="mt-10 h-48 rounded-2xl bg-ink/5" />
+      </div>
+    );
+  }
   const key = `${state.status}-${state.index}-${state.phase}`;
 
+  /* Waiting room */
   if (state.status === "waiting") {
     return (
-      <div className="grid gap-12 lg:grid-cols-2">
-        <div>
-          <h1 className="text-4xl sm:text-5xl">You're in, {me.nickname}.</h1>
-          <p className="mt-4 text-muted">Waiting for the host to start the game.</p>
-        </div>
-        <div>
-          <h2 className="text-2xl">In the room <span className="text-muted">{players.length}</span></h2>
-          <ul className="mt-3 border-t border-line">
-            {players.map((p) => <li key={p.id} className="border-b border-line py-3">{p.nickname}{p.id === me.playerId && <span className="text-muted"> (you)</span>}</li>)}
-          </ul>
-        </div>
+      <div>
+        <p className="flex items-center gap-2.5 text-sm text-muted">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+          </span>
+          Waiting for the host to start
+        </p>
+        <h1 className="mt-6 text-5xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">
+          You're in,
+          <br />
+          {me.nickname}.
+        </h1>
+        <p className="mt-4 text-muted">Keep this screen open. The first question appears here by itself.</p>
+
+        <h2 className="mt-14 text-xl">In the room <span className="font-sans text-base text-muted">{players.length}</span></h2>
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {players.map((p) => (
+            <li key={p.id} className={`animate-[rise_0.3s_ease-out] rounded-full border px-4 py-2 text-sm ${p.id === me.playerId ? "border-ink bg-ink text-paper" : "border-line bg-white"}`}>
+              {p.nickname}{p.id === me.playerId && " (you)"}
+            </li>
+          ))}
+        </ul>
       </div>
     );
   }
 
+  /* Finished */
   if (state.status === "finished") {
     return (
-      <div className="max-w-2xl">
-        <h1 className="text-4xl sm:text-5xl">That's the game.</h1>
-        <p className="mt-3 text-muted">Final standings</p>
-        <div className="mt-6"><Leaderboard sessionId={me.sessionId} refreshKey={key} meId={me.playerId} /></div>
-        <Link href="/join" className="btn-ghost mt-8">Join another game</Link>
+      <div>
+        <h1 className="text-5xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">That's the game.</h1>
+        <p className="mt-3 text-muted">Here's how everyone finished.</p>
+        <div className="mt-8 rounded-2xl border border-line bg-white p-5 sm:p-7">
+          <Leaderboard sessionId={me.sessionId} refreshKey={key} meId={me.playerId} />
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link href="/join" className="btn-primary h-12 px-6 text-base">Join another game</Link>
+          <Link href="/explore" className="btn-ghost h-12 px-6 text-base">Explore quizzes</Link>
+        </div>
       </div>
     );
   }
 
+  /* Question and reveal */
   const q = state.question!;
   const reveal = state.phase === "reveal";
   const picked = pick && pick.index === state.index ? pick.option : null;
   const locked = !!picked || !!state.answered;
   const timeUp = upFor === state.index;
+  const my = state.my;
 
   return (
-    <div className="max-w-2xl">
-      <p className="text-muted">Question {state.index + 1} of {state.total}</p>
-      <h1 className="mt-3 text-3xl leading-snug sm:text-4xl">{q.text}</h1>
+    <div>
+      <div className="flex items-center justify-between text-sm text-muted">
+        <span>Question {state.index + 1} of {state.total}</span>
+        {reveal && my && <span>Score {my.score}</span>}
+      </div>
+      <div className="mt-3"><Progress index={state.index} total={state.total} /></div>
 
-      {!reveal && (
+      {!reveal ? (
         <div className="mt-6">
           <Countdown key={state.index} seconds={q.remaining} receivedAt={receivedAt} total={q.time_limit} onDone={() => setUpFor(state.index)} />
         </div>
+      ) : (
+        my && (
+          <div className={`mt-6 rounded-2xl border p-5 ${my.correct ? "border-ink bg-ink text-paper" : "border-line bg-white"}`}>
+            <p className="font-serif text-3xl tracking-[-0.02em]">
+              {my.option_id === null ? "No answer in time." : my.correct ? "Correct." : "Not this time."}
+            </p>
+            <p className={`mt-1 text-sm ${my.correct ? "text-paper/70" : "text-muted"}`}>
+              {my.correct ? `+${my.points} points` : "No points for this one."}
+            </p>
+          </div>
+        )
       )}
 
-      <ul className="mt-6 space-y-2">
-        {q.options.map((o) => {
+      <h1 className="mt-8 text-2xl leading-snug tracking-[-0.01em] sm:text-3xl">{q.text}</h1>
+
+      <ul className="mt-6 space-y-3">
+        {q.options.map((o, i) => {
           const right = reveal && o.id === state.correct_option_id;
-          const mine = reveal ? state.my?.option_id === o.id : picked === o.id;
+          const mineWrong = reveal && my?.option_id === o.id && !right;
+          const mineLive = !reveal && picked === o.id;
           return (
             <li key={o.id}>
               <button
                 onClick={() => answer(o.id, state.index)}
                 disabled={reveal || locked || timeUp}
-                className={`w-full rounded-lg border px-4 py-4 text-left transition-colors ${right ? "border-ink bg-ink text-paper" : mine ? "border-ink" : reveal ? "border-line text-muted" : "border-line hover:border-ink"} disabled:cursor-default`}
+                className={`flex w-full items-center gap-4 rounded-2xl border px-4 py-4 text-left text-lg transition active:scale-[0.99] disabled:cursor-default ${
+                  right ? "border-ink bg-ink text-paper"
+                  : mineWrong ? "border-ink/40 bg-white text-muted"
+                  : mineLive ? "border-ink bg-white ring-4 ring-ink/10"
+                  : reveal || locked || timeUp ? "border-line bg-white/50 text-muted"
+                  : "border-line bg-white hover:border-ink"
+                }`}
               >
-                {o.text}
+                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-serif ${right ? "bg-paper text-ink" : "bg-paper text-muted"}`}>
+                  {"ABCD"[i]}
+                </span>
+                <span className={`flex-1 ${mineWrong ? "line-through decoration-1" : ""}`}>{o.text}</span>
+                {right && <Check size={20} />}
+                {mineWrong && <X size={20} />}
               </button>
             </li>
           );
         })}
       </ul>
 
-      {!reveal && locked && <p className="mt-5 text-muted" aria-live="polite">Answer locked in. Waiting for the others.</p>}
-      {!reveal && !locked && timeUp && <p className="mt-5 text-muted">Time's up.</p>}
-      {err && <p role="alert" className="mt-5 text-sm text-red-700">{err}</p>}
+      {!reveal && locked && <p className="mt-6 text-center text-muted" aria-live="polite">Answer locked in. Waiting for the others.</p>}
+      {!reveal && !locked && timeUp && <p className="mt-6 text-center text-muted">Time's up.</p>}
+      {err && <p role="alert" className="mt-6 text-center text-sm text-red-700">{err}</p>}
 
-      {reveal && state.my && (
-        <div className="mt-8">
-          <p className="font-serif text-2xl">
-            {state.my.option_id === null ? "No answer in time." : state.my.correct ? `Correct. +${state.my.points} points.` : "Not this time."}
-          </p>
-          <p className="mt-1 text-muted">Your score: {state.my.score}</p>
-          <h2 className="mb-3 mt-8 text-2xl">Leaderboard</h2>
-          <Leaderboard sessionId={me.sessionId} refreshKey={key} meId={me.playerId} limit={5} />
+      {reveal && (
+        <div className="mt-12">
+          <h2 className="mb-3 text-2xl">Leaderboard</h2>
+          <div className="rounded-2xl border border-line bg-white p-5">
+            <Leaderboard sessionId={me.sessionId} refreshKey={key} meId={me.playerId} limit={5} />
+          </div>
+          <p className="mt-5 text-center text-sm text-muted">The next question starts when the host moves on.</p>
         </div>
       )}
     </div>
@@ -135,9 +202,10 @@ export default function PlayRoom({ code }: { code: string }) {
   if (me === undefined) return <p className="text-muted">Loading...</p>;
   if (me === null) {
     return (
-      <div>
-        <h1 className="text-4xl">Join this room first</h1>
-        <Link href="/join" className="btn-primary mt-6">Enter a code</Link>
+      <div className="rounded-2xl border border-dashed border-line px-6 py-16 text-center">
+        <h1 className="text-3xl">Join this room first</h1>
+        <p className="mx-auto mt-2 max-w-xs text-muted">Enter the code and a nickname so the host can see you.</p>
+        <Link href="/join" className="btn-primary mt-6 h-12 px-6 text-base">Enter a code</Link>
       </div>
     );
   }

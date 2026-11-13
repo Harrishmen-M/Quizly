@@ -21,26 +21,24 @@ async function Room({ params }: { params: Promise<{ code: string }> }) {
     .select("id, nickname")
     .eq("session_id", session.id)
     .order("nickname");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const title = (session.quizzes as any)?.title ?? "Your quiz";
+
+  const title = (session.quizzes as unknown as { title: string } | null)?.title ?? "Your quiz";
+  return <HostRoom sessionId={session.id} code={code} title={title} initialPlayers={players ?? []} />;
+}
+
+function RoomSkeleton() {
   return (
-    <HostRoom
-      sessionId={session.id}
-      code={code}
-      title={title}
-      initialPlayers={players ?? []}
-    />
+    <div aria-hidden className="grid animate-pulse gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="h-96 rounded-2xl bg-ink/5" />
+      <div className="h-96 rounded-2xl bg-ink/5" />
+    </div>
   );
 }
 
-export default function Page({
-  params,
-}: {
-  params: Promise<{ code: string }>;
-}) {
+export default function Page({ params }: { params: Promise<{ code: string }> }) {
   return (
-    <div className="wrap pt-14">
-      <Suspense fallback={<p className="text-muted">Opening room...</p>}>
+    <div className="mx-auto w-full max-w-6xl px-5 pt-12 sm:px-8">
+      <Suspense fallback={<RoomSkeleton />}>
         <Room params={params} />
       </Suspense>
     </div>
