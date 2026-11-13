@@ -44,14 +44,10 @@ export default function Home() {
       <section className="wrap grid gap-20 pt-16 sm:pt-28 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
           <h1 className="max-w-xl text-5xl leading-[1] tracking-[-0.04em] sm:text-7xl lg:text-[5.25rem]">
-            Quizzes people actually want to{" "}
-            <span className="underline decoration-accent decoration-[3px] underline-offset-[0.14em]">
-              finish.
-            </span>
+            Where Every Answer Is an Adventure.
           </h1>
           <p className="mt-8 max-w-md text-lg leading-relaxed text-muted">
-            Where Every Answer Is an Adventure. Build a quiz, share the code,
-            and see who claims the crown!
+            Build a quiz, share the code, and see who claims the crown!
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link href="/create" className="btn-primary h-12 px-6 text-base">
